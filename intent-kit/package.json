@@ -1,0 +1,24 @@
+{
+  "name": "intent-kit",
+  "version": "0.1.0",
+  "description": "Executable starter kit for Intent-Driven Engineering workflows.",
+  "type": "commonjs",
+  "bin": {
+    "intentkit": "./bin/intentkit.js"
+  },
+  "scripts": {
+    "intentkit": "node bin/intentkit.js",
+    "demo": "node bin/intentkit.js init && node bin/intentkit.js feature example-customer-onboarding",
+    "test": "node bin/intentkit.js help"
+  },
+  "keywords": [
+    "intent-driven-engineering",
+    "ai-engineering",
+    "claude-code",
+    "copilot",
+    "spec-driven-development",
+    "agents"
+  ],
+  "author": "Learn Teach Master / Intent-Driven Engineering",
+  "license": "MIT"
+}
