@@ -1,10 +1,10 @@
 {
-  "name": "intentkit",
+  "name": "intent-kit",
   "version": "0.1.0",
   "description": "Executable starter kit for Intent-Driven Engineering workflows.",
   "type": "commonjs",
   "bin": {
-    "intentkit": "./bin/intentkit.js"
+    "intent-kit": "./bin/intentkit.js"
   },
   "scripts": {
     "intentkit": "node bin/intentkit.js",
@@ -20,5 +20,13 @@
     "agents"
   ],
   "author": "Learn Teach Master / Intent-Driven Engineering",
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "bin/",
+    ".intent/",
+    ".claude/",
+    ".github/",
+    "install.sh",
+    "CLAUDE.md"
+  ]
 }
