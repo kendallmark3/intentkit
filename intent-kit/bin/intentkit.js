@@ -8,7 +8,6 @@ const kitRoot = path.resolve(__dirname, '..');
 
 const rawArgs = process.argv.slice(2);
 const DRY_RUN = rawArgs.includes('--dry-run');
-const FORCE = rawArgs.includes('--force');
 const positional = rawArgs.filter(a => !a.startsWith('--'));
 const [cmd, ...cmdArgs] = positional;
 
@@ -29,12 +28,12 @@ function mkdirp(p) {
 function writeFile(dest, content) {
   const rel = path.relative(root, dest);
   if (DRY_RUN) {
-    const tag = fs.existsSync(dest) ? 'would skip (exists)' : 'would create';
+    const tag = fs.existsSync(dest) ? 'would skip (exists — not modified)' : 'would create';
     console.log(`  [dry-run] ${tag}: ${rel}`);
     return;
   }
-  if (fs.existsSync(dest) && !FORCE) {
-    console.log(`  ⚠  skipped (exists): ${rel}`);
+  if (fs.existsSync(dest)) {
+    console.log(`  —  kept (already exists): ${rel}`);
     skipped.push(rel);
     return;
   }
@@ -81,8 +80,8 @@ function init() {
   // CLAUDE.md — never overwritten, not even with --force
   const claudeDest = path.join(root, 'CLAUDE.md');
   if (fs.existsSync(claudeDest)) {
-    console.log('  ⚠  CLAUDE.md already exists — skipped.');
-    console.log('     Add IntentKit guidance manually from: intent-kit/CLAUDE.md\n');
+    console.log('  —  CLAUDE.md already exists — not modified.');
+    console.log('     To add IntentKit guidance, append from: intent-kit/CLAUDE.md\n');
   } else {
     const claudeSrc = path.join(kitRoot, 'CLAUDE.md');
     const claudeContent = fs.existsSync(claudeSrc)
@@ -107,10 +106,9 @@ function init() {
 
   if (!DRY_RUN) {
     console.log(`\nIntentKit initialized.`);
-    console.log(`  ${created.length} file(s) created, ${skipped.length} skipped.`);
+    console.log(`  ${created.length} file(s) created.`);
     if (skipped.length) {
-      console.log('  Run with --force to overwrite skipped files.');
-      console.log('  (CLAUDE.md is never overwritten regardless of flags.)');
+      console.log(`  ${skipped.length} file(s) already existed in your repo — not modified.`);
     }
     console.log('\nNext: intentkit doctor');
   }
@@ -251,12 +249,14 @@ IntentKit — Intent-Driven Engineering CLI
 
 Commands:
   intentkit init                   Initialize .intent/, .claude/commands/, .github/prompts/
-  intentkit init --dry-run         Show what would be created, write nothing
-  intentkit init --force           Overwrite existing IntentKit files (CLAUDE.md is never overwritten)
+  intentkit init --dry-run         Preview what would be created — writes nothing
   intentkit feature "name"         Create a new intent workspace under intents/
   intentkit status                 Show artifact completion for all intent workspaces
   intentkit doctor                 Verify all IntentKit files are installed
   intentkit help                   Show this help
+
+Safety: intentkit never overwrites existing files in your repo.
+        CLAUDE.md is always skipped if it exists.
 
 Delivery loop (in Claude Code):
   /ide.capture  /ide.refine  /ide.context  /ide.plan  /ide.tasks
