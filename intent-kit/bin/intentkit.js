@@ -77,25 +77,31 @@ function nextIntentNumber() {
 function init() {
   if (DRY_RUN) console.log('Dry run — no files will be written.\n');
 
-  // CLAUDE.md — never overwritten, not even with --force
+  // CLAUDE.md — never overwritten; append IntentKit section if missing
   const claudeDest = path.join(root, 'CLAUDE.md');
+  const intentkitSection = [
+    '\n## IntentKit — Intent-Driven Engineering\n',
+    'This repo uses IntentKit. Before coding on any feature, read the active intent',
+    'under `intents/` and team context in `.intent/memory/`.\n',
+    'Delivery loop (Claude Code slash commands):',
+    '`/ide.capture` → `/ide.refine` → `/ide.context` → `/ide.plan` → `/ide.tasks`',
+    '→ `/ide.implement` → `/ide.verify` → `/ide.evidence` → `/ide.impact`\n',
+    'CLI: `intentkit feature "name"` | `intentkit status` | `intentkit doctor`\n'
+  ].join('\n');
+
   if (fs.existsSync(claudeDest)) {
-    console.log('  —  CLAUDE.md already exists — not modified.');
-    console.log('     To add IntentKit guidance, append from: intent-kit/CLAUDE.md\n');
+    const existing = fs.readFileSync(claudeDest, 'utf8');
+    if (existing.includes('IntentKit')) {
+      console.log('  —  CLAUDE.md already contains IntentKit section — not modified.');
+    } else if (!DRY_RUN) {
+      fs.appendFileSync(claudeDest, intentkitSection, 'utf8');
+      console.log('  ✓  CLAUDE.md — appended IntentKit section.');
+      created.push('CLAUDE.md (appended)');
+    } else {
+      console.log('  [dry-run] would append IntentKit section to: CLAUDE.md');
+    }
   } else {
-    const claudeSrc = path.join(kitRoot, 'CLAUDE.md');
-    const claudeContent = fs.existsSync(claudeSrc)
-      ? fs.readFileSync(claudeSrc, 'utf8')
-      : [
-          '# Intent-Driven Engineering Workspace\n',
-          'This repo uses IntentKit. Before coding, read `.intent/memory/principles.md`',
-          'and the active intent under `intents/`. Use the `/ide.*` slash commands in',
-          'Claude Code to move through the delivery loop.\n',
-          '## Delivery loop\n',
-          '/ide.capture → /ide.context → /ide.plan → /ide.tasks →',
-          '/ide.implement → /ide.verify → /ide.evidence → /ide.impact\n'
-        ].join('\n');
-    writeFile(claudeDest, claudeContent);
+    writeFile(claudeDest, '# Intent-Driven Engineering Workspace\n' + intentkitSection);
   }
 
   copyDir(path.join(kitRoot, '.intent'), path.join(root, '.intent'));
