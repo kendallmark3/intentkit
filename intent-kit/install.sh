@@ -5,14 +5,28 @@ REPO="kendallmark3/intentkit"
 BRANCH="main"
 ARCHIVE="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz"
 
-echo "IntentKit — initializing..."
+echo "IntentKit — installing..."
 echo ""
 
+# Download to file so curl failures don't silently corrupt extraction
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-curl -fsSL "$ARCHIVE" | tar xz -C "$TMP"
+if ! curl -fsSL "$ARCHIVE" -o "$TMP/archive.tar.gz"; then
+  echo "Error: could not download IntentKit from GitHub." >&2
+  exit 1
+fi
+
+if ! tar xz -C "$TMP" -f "$TMP/archive.tar.gz" 2>/dev/null; then
+  echo "Error: archive download was incomplete or corrupt. Try again." >&2
+  exit 1
+fi
+
 KIT="$TMP/intentkit-${BRANCH}/intent-kit"
+if [ ! -d "$KIT" ]; then
+  echo "Error: unexpected archive layout — please report at github.com/${REPO}/issues" >&2
+  exit 1
+fi
 
 created=0
 skipped=0
@@ -20,12 +34,10 @@ skipped=0
 install_file() {
   local src="$1" dest="$2"
   if [ -e "$dest" ]; then
-    echo "  —  kept (already exists): $dest"
     skipped=$((skipped + 1))
   else
     mkdir -p "$(dirname "$dest")"
     cp "$src" "$dest"
-    echo "  ✓  created: $dest"
     created=$((created + 1))
   fi
 }
@@ -54,15 +66,13 @@ Run `/intentkit` in Claude Code to create and manage feature workspaces.
 
 if [ -f "CLAUDE.md" ]; then
   if grep -q "IntentKit" CLAUDE.md; then
-    echo "  —  CLAUDE.md already has IntentKit section"
+    skipped=$((skipped + 1))
   else
     printf '%s' "$INTENTKIT_SECTION" >> CLAUDE.md
-    echo "  ✓  CLAUDE.md — appended IntentKit section"
     created=$((created + 1))
   fi
 else
   printf '%s' "$INTENTKIT_SECTION" > CLAUDE.md
-  echo "  ✓  created: CLAUDE.md"
   created=$((created + 1))
 fi
 
@@ -71,14 +81,24 @@ install_dir "$KIT/.claude" ".claude"
 install_dir "$KIT/.github" ".github"
 mkdir -p intents
 
-echo ""
-echo "IntentKit initialized."
-echo "  ${created} file(s) created"
-if [ "$skipped" -gt 0 ]; then
-  echo "  ${skipped} file(s) already existed — not modified"
+# Stage everything in git if inside a repo
+if git rev-parse --git-dir > /dev/null 2>&1; then
+  git add .intent .claude .github intents CLAUDE.md 2>/dev/null || true
 fi
+
+echo "Done. ${created} file(s) installed, ${skipped} already present."
 echo ""
-echo "Next steps:"
-echo "  1. Open this repo in Claude Code"
-echo "  2. Run /intentkit to create your first feature workspace"
-echo "  3. Run /ide.capture to start the delivery loop"
+echo "Slash commands now available in Claude Code:"
+echo ""
+echo "  /intentkit          create features, check status, run doctor"
+echo "  /ide.capture        start the delivery loop"
+echo "  /ide.refine         remove ambiguity, lock decisions"
+echo "  /ide.context        pull repo facts before implementation"
+echo "  /ide.plan           build the technical plan"
+echo "  /ide.tasks          generate ordered tasks"
+echo "  /ide.implement      guided repo-aware implementation"
+echo "  /ide.verify         run tests and acceptance checks"
+echo "  /ide.evidence       document what was built"
+echo "  /ide.impact         measure outcomes"
+echo ""
+echo "Open Claude Code and run: /intentkit"
