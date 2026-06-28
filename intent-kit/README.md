@@ -14,35 +14,31 @@ AI coding tools are moving from prompt-driven coding toward structured, persiste
 
 ## Quick start
 
+Run this from any repo — no npm account, no global install, just bash and curl:
+
 ```bash
-# Option A: use directly from this repo
-node bin/intentkit.js init
-node bin/intentkit.js feature "customer onboarding wizard"
-node bin/intentkit.js status
-
-# Option B: install locally in another repo
-npm link
-intentkit init
-intentkit feature "customer onboarding wizard"
+curl -fsSL https://raw.githubusercontent.com/kendallmark3/intentkit/main/intent-kit/install.sh | bash
 ```
 
-Then open the repo in Claude Code and run the command prompts from:
+Then open the repo in Claude Code and run:
 
-```text
-.claude/commands/ide.capture.md
-.claude/commands/ide.refine.md
-.claude/commands/ide.plan.md
-.claude/commands/ide.tasks.md
-.claude/commands/ide.implement.md
-.claude/commands/ide.verify.md
-.claude/commands/ide.evidence.md
-.claude/commands/ide.impact.md
+```
+/intentkit feature "customer onboarding wizard"
 ```
 
-For Copilot-compatible prompt files, see:
+That's it. The delivery loop runs entirely as Claude Code slash commands:
 
-```text
-.github/prompts/
+```
+/ide.capture → /ide.refine → /ide.context → /ide.plan → /ide.tasks
+→ /ide.implement → /ide.verify → /ide.evidence → /ide.impact
+```
+
+For Copilot-compatible prompt files, see `.github/prompts/`.
+
+**If you already have this repo cloned** and want to install into a target repo directly:
+
+```bash
+node /path/to/intent-kit/bin/intentkit.js init
 ```
 
 ## Day-one workflow
